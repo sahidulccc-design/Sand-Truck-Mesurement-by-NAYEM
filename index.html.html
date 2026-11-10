@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Truck CFT Calculator - Akij Pipes Ltd</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Hind Siliguri', 'Inter', sans-serif;
+            background-color: #f8fafc;
+            -webkit-tap-highlight-color: transparent;
+        }
+        /* Mobile touch responsiveness optimization */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 6px;
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            .print-only {
+                display: block !important;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-800 flex flex-col justify-between pb-10">
+
+    <!-- Header Section -->
+    <header class="bg-slate-900 text-white shadow-lg border-b-4 border-amber-500 sticky top-0 z-40 no-print">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+            <div class="flex items-center space-x-3">
+                <div class="bg-amber-500 p-2 rounded-xl text-slate-950 font-extrabold shadow-md">
+                    <i data-lucide="truck" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="text-base md:text-xl font-bold tracking-tight text-amber-400 leading-tight">আকিজ পাইপ মিলস লি: <span class="text-xs md:text-sm text-slate-300 font-normal">| ট্রাক সিএফটি ক্যালকুলেটর</span></h1>
+                    <p class="text-[11px] text-slate-400">মেটেরিয়াল রিসিভিং ও পরিমাপ সিস্টেম (DMT & 3-Point Average)</p>
+                </div>
+            </div>
+            
+            <!-- Dynamic Count Badge -->
+            <div class="flex items-center space-x-2 bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-xl shadow-inner">
+                <i data-lucide="package-check" class="w-4 h-4 text-amber-400"></i>
+                <div class="text-right">
+                    <span class="text-[10px] text-slate-400 block uppercase font-medium leading-none">আজকের এন্ট্রি</span>
+                    <span id="dailyCounter" class="text-sm md:text-base font-bold text-amber-400 font-mono leading-none">0</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-6xl mx-auto w-full px-3 md:px-4 mt-4 flex-grow grid grid-cols-1 lg:grid-cols-12 gap-5 no-print">
+
+        <!-- Left Input Column (7 Cols on LG) -->
+        <div class="lg:col-span-7 space-y-4">
+
+            <!-- Card 1: Mode Selector & Basic Info -->
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
+                        <i data-lucide="settings" class="w-4 h-4 text-amber-500"></i> ১. পরিমাপের নিয়ম বাছাই করুন
+                    </span>
+                    <button type="button" onclick="resetForm()" class="text-xs text-rose-600 hover:text-rose-700 font-semibold flex items-center gap-1 bg-rose-50 px-2.5 py-1 rounded-lg border border-rose-200 transition">
+                        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> রিসেট ফরম
+                    </button>
+                </div>
+
+                <!-- Preset Mode Switchers -->
+                <div class="grid grid-cols-2 gap-2 mb-4">
+                    <button type="button" id="btnModeStd" onclick="setTruckMode('std')" class="py-3 px-3 rounded-xl border-2 font-bold text-xs md:text-sm flex flex-col items-center justify-center transition bg-amber-500 text-slate-950 border-amber-500 shadow-md">
+                        <div class="flex items-center gap-1">
+                            <i data-lucide="shield-check" class="w-4 h-4"></i>
+                            <span>স্ট্যান্ডার্ড DMT ট্রাক</span>
+                        </div>
+                        <span class="text-[10px] opacity-85 font-normal mt-0.5">বডি 374.35 CFT + ৩-পয়েন্ট গড়</span>
+                    </button>
+                    <button type="button" id="btnModeCustom" onclick="setTruckMode('custom')" class="py-3 px-3 rounded-xl border-2 font-bold text-xs md:text-sm flex flex-col items-center justify-center transition bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100">
+                        <div class="flex items-center gap-1">
+                            <i data-lucide="sliders" class="w-4 h-4"></i>
+                            <span>অন্যান্য / কাস্টম ট্রাক</span>
+                        </div>
+                        <span class="text-[10px] opacity-70 font-normal mt-0.5">নিজের মতো ম্যানুয়াল ইনপুট</span>
+                    </button>
+                </div>
+
+                <!-- Invoice & Truck Details -->
+                <div class="grid grid-cols-2 gap-3 pt-3 border-t border-slate-100">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">চালান নম্বর (Challan No)</label>
+                        <input type="text" id="challanNo" placeholder="যেমন: 312 / 318" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-amber-500 focus:outline-none bg-slate-50 focus:bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">ট্রাক নম্বর (Truck No)</label>
+                        <input type="text" id="truckNo" placeholder="যেমন: 28-4956" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-amber-500 focus:outline-none bg-slate-50 focus:bg-white">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2: Main Body Base CFT Configuration -->
+            <!-- Standard Mode Banner -->
+            <div id="stdBaseCard" class="bg-amber-50 border border-amber-300 rounded-2xl p-4 shadow-sm">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <span class="text-xs font-bold text-amber-950 uppercase block">স্থায়ী ফিক্সড বেস মাপ (Standard Body)</span>
+                        <span class="text-xs font-mono font-bold text-amber-800">13' 2" × 7' 7" × 3' 9"</span>
+                        <p class="text-[10px] text-amber-700 mt-0.5">*চালান নং ৩২০, ৩১২ ও ৩১৮ অনুযায়ী বেস বডির স্থির আয়তন</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xl md:text-2xl font-black text-amber-950 font-mono">374.35</span>
+                        <span class="text-xs font-bold text-amber-800 block">CFT</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Custom Mode Inputs -->
+            <div id="customBaseCard" class="hidden bg-white rounded-2xl p-4 shadow-sm border border-slate-200 space-y-3">
+                <div class="flex justify-between items-center">
+                    <span class="text-xs font-bold text-slate-700 uppercase">কাস্টম বেস বডির মাপ (Main Body Dimensions)</span>
+                    <span id="customBaseCftBadge" class="text-xs font-mono font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">0.00 CFT</span>
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                    <div class="bg-slate-50 p-2 rounded-xl border border-slate-200">
+                        <span class="text-[11px] font-semibold text-slate-500 block mb-1">দৈর্ঘ্য (Length)</span>
+                        <div class="flex gap-1">
+                            <input type="number" id="base_l_ft" placeholder="ফুট" oninput="calculate()" class="w-1/2 p-1.5 text-xs font-bold border rounded text-center">
+                            <input type="number" id="base_l_in" placeholder="ইঞ্চি" oninput="calculate()" class="w-1/2 p-1.5 text-xs font-bold border rounded text-center">
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 p-2 rounded-xl border border-slate-200">
+                        <span class="text-[11px] font-semibold text-slate-500 block mb-1">প্রস্থ (Width)</span>
+                        <div class="flex gap-1">
+                            <input type="number" id="base_w_ft" placeholder="ফুট" oninput="calculate()" class="w-1/2 p-1.5 text-xs font-bold border rounded text-center">
+                            <input type="number" id="base_w_in" placeholder="ইঞ্চি" oninput="calculate()" class="w-1/2 p-1.5 text-xs font-bold border rounded text-center">
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 p-2 rounded-xl border border-slate-200">
+                        <span class="text-[11px] font-semibold text-slate-500 block mb-1">উচ্চতা (Height)</span>
+                        <div class="flex gap-1">
+                            <input type="number" id="base_h_ft" placeholder="ফুট" oninput="calculate()" class="w-1/2 p-1.5 text-xs font-bold border rounded text-center">
+                            <input type="number" id="base_h_in" placeholder="ইঞ্চি" oninput="calculate()" class="w-1/2 p-1.5 text-xs font-bold border rounded text-center">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 3: 3-Point Average Measurements Inputs -->
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 space-y-4">
+                <div class="flex justify-between items-center pb-2 border-b border-slate-100">
+                    <span class="text-xs font-bold text-blue-700 uppercase flex items-center gap-1.5">
+                        <i data-lucide="layers" class="w-4 h-4 text-blue-600"></i> ২. অতিরিক্ত / অসমান অংশের ৩-পয়েন্ট গড় মাপ
+                    </span>
+                    <span id="avgCftDisplayBadge" class="text-xs bg-blue-50 text-blue-800 px-2.5 py-1 rounded-lg font-bold border border-blue-200 font-mono">
+                        + 0.00 CFT
+                    </span>
+                </div>
+
+                <!-- Length 3-Point Samples -->
+                <div>
+                    <div class="flex justify-between items-center mb-1.5">
+                        <span class="text-xs font-bold text-slate-700">দৈর্ঘ্য (Length 1, 2, 3)</span>
+                        <span id="avgLengthDisplay" class="text-[11px] text-slate-500 font-mono font-semibold">গড়: 0' 0"</span>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div class="bg-slate-50 p-2 rounded-xl border border-slate-200">
+                            <span class="text-[10px] text-slate-500 block font-semibold mb-0.5">L1 (পয়েন্ট ১)</span>
+                            <div class="flex gap-1">
+                                <input type="number" id="l1_ft" placeholder="ফুট" oninput="calculate()" class="w-1/2 p-1.5 text-xs font-bold border rounded text-center">
+                                <input type="number" id="l1_in" placeholder="ইঞ্চি" oninput="calculate()" class="w-1/2 p-1.5 text-xs font-bold border rounded text-center">
+                            </div>
+                        </div>
+                        <div class="bg-slate-50 p-2 rounded-xl border border-slate-200">
+                            <span class="text-[10px] text-slate-500 block font-semibold mb-0.5">L2 (পয়েন্ট ২)</span>
+                            <div class="flex gap-1">
+                                <input type="number" id="l2_ft" placeholder="ফুট" oninput="calculate()" class="w-1/2 p-1.5 text-xs font-bold border rounded text-center">
+                                <input type="number" id="l2_in" placeholder="ইঞ্চি" oninput="calculate()" class="w-1/2 p-1.5 text-xs font-bold border rounded text-center">
+                            </div>
+                        </div>
+                        <div class="bg-slate-50 p-2 rounded-xl border border-slate-200">
+                            <span class="text-[10px] text-slate-500 block font-semibold mb-0.5">L3 (পয়েন্ট ৩)</span>
+                            <div class="flex gap-1">
+                                <input type="number" id="l3_ft" placeholder="ফুট" oninput="calculate()" class="w-1/2 p-1.5 text-xs font-bold border rounded text-center">
+                                <input type="number" id="l3_in" placeholder="ইঞ্চি" oninput="calculate()" class="w-1/2 p-1.5 text-xs font-bold border rounded text-center">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Width 3-Point Samples -->
+                <div>
+                    <div class="flex justify-between items-center mb-1.5">
+                        <span class="text-xs font-bold text-slate-700">প্রস্থ (Width 1, 2, 3)</span>
+                        <span id="avgWidthDisplay" class="text-[11px] text-slate-500 font-mono font-semibold">গড়: 0' 0"</span>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div class="bg-slate-50 p-2 rounded-xl border border-slate-200">
+                            <span class="text-[10px] text-slate-500 block font-semibold mb-0.5">W1 (পয়েন্ট ১)</span>
+                            <div class="flex gap-1">
+                                <input type="number" id="w1_ft" placeholder="ফুট" oninput="calculate()" class="w-1/2 p-1.5 text-xs font-bold border rounded text-center">
+                                <input type="number" id="w1_in" placeholder="ইঞ্চি" oninput="calculate()" class="w-1/2 p-1.5 text-xs font-bold border rounded text-center">
+                            </div>
+                        </div>
+                        <div class="bg-slate-50 p-2 rounded-xl border border-slate-200">
+                            <span class="text-[10px] text-slate-500 block font-semibold mb-0.5">W2 (পয়েন্ট ২)</span>
+                            <div class="flex gap-1">
+                                <input type="number" id="w2_ft" placeholder="ফুট" oninput="calculate()" class="w-1/2 p-1.5 text-xs font-bold border rounded text-center">
+                                <input type="number" id="w2_in" placeholder="ইঞ্চি" oninput="calculate()" class="w-1/2 p-1.5 text-xs font-bold border rounded text-center">
+                            </div>
+                        </div>
+                        <div class="bg-slate-50 p-2 rounded-xl border border-slate-200">
+                            <span class="text-[10px] text-slate-500 block font-semibold mb-0.5">W3 (পয়েন্ট ৩)</span>
+                            <div class="flex gap-1">
+                                <input type="number" id="w3_ft" placeholder="ফুট" oninput="calculate()" class="w-1/2 p-1.5 text-xs font-bold border rounded text-center">
+                                <input type="number" id="w3_in" placeholder="ইঞ্চি" oninput="calculate()" class="w-1/2 p-1.5 text-xs font-bold border rounded text-center">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Height of 2nd Part -->
+                <div class="pt-2 border-t border-slate-100">
+                    <span class="text-xs font-bold text-slate-700 block mb-1">অতিরিক্ত অংশের গভীরতা / উচ্চতা (Height / Depth)</span>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-slate-50 p-2 rounded-xl border border-slate-200 flex items-center gap-2">
+                            <span class="text-xs font-semibold text-slate-500">ফুট:</span>
+                            <input type="number" id="h_ft" placeholder="0" oninput="calculate()" class="w-full p-1.5 text-sm font-bold border rounded text-center">
+                        </div>
+                        <div class="bg-slate-50 p-2 rounded-xl border border-slate-200 flex items-center gap-2">
+                            <span class="text-xs font-semibold text-slate-500">ইঞ্চি:</span>
+                            <input type="number" id="h_in" placeholder="0" oninput="calculate()" class="w-full p-1.5 text-sm font-bold border rounded text-center">
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Right Output Dashboard Column (5 Cols on LG) -->
+        <div class="lg:col-span-5 space-y-4 flex flex-col justify-between">
+
+            <!-- Result Calculation Dashboard Card -->
+            <div class="bg-slate-900 text-white rounded-2xl p-5 shadow-xl border border-slate-800 relative overflow-hidden flex flex-col justify-between h-full min-h-[380px]">
+                <i data-lucide="calculator" class="w-48 h-48 absolute -right-8 -bottom-8 text-slate-800/40 pointer-events-none"></i>
+
+                <div>
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-xs font-bold text-amber-400 tracking-wider uppercase flex items-center gap-1">
+                            <i data-lucide="sparkles" class="w-4 h-4"></i> ফলাফল (Total Output)
+                        </span>
+                        <span id="activeModeLabel" class="text-[11px] bg-slate-800 px-2.5 py-0.5 rounded-md text-slate-300 border border-slate-700 font-medium">স্ট্যান্ডার্ড DMT</span>
+                    </div>
+
+                    <!-- Live Giant Result Number -->
+                    <div class="my-5 text-center bg-slate-950/60 p-4 rounded-xl border border-slate-800">
+                        <div class="text-4xl md:text-5xl font-black text-amber-400 font-mono tracking-tight leading-none" id="totalCftDisplay">374.35</div>
+                        <span class="text-xs font-semibold text-slate-400 mt-2 block tracking-widest uppercase">CFT (ঘনফুট)</span>
+                    </div>
+
+                    <!-- Breakdown Table -->
+                    <div class="space-y-2 pt-2 border-t border-slate-800/80 text-xs text-slate-300">
+                        <div class="flex justify-between">
+                            <span class="text-slate-400">১ম অংশ (বেস বডি):</span>
+                            <span class="font-mono font-bold text-amber-300" id="breakdownBase">374.35 CFT</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-400">২য় অংশ (৩-পয়েন্ট গড়):</span>
+                            <span class="font-mono font-bold text-blue-300" id="breakdownAvg">0.00 CFT</span>
+                        </div>
+                        <div class="flex justify-between pt-2 border-t border-slate-800 text-slate-200 font-bold">
+                            <span>মোট হিসাবসূত্র:</span>
+                            <span class="font-mono text-amber-400 text-xs">বেস + গড় সিএফটি</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Button Cluster -->
+                <div class="mt-6 space-y-2.5">
+                    <button type="button" onclick="saveTruckLog()" class="w-full bg-amber-500 hover:bg-amber-600 active:scale-[0.98] text-slate-950 font-extrabold py-3.5 px-4 rounded-xl shadow-lg transition duration-150 flex items-center justify-center gap-2 text-base">
+                        <i data-lucide="save" class="w-5 h-5"></i> এই গাড়ি সেভ করুন (Save Entry)
+                    </button>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" onclick="copyWhatsAppSummary()" class="bg-slate-800 hover:bg-slate-700 active:scale-[0.98] text-slate-200 font-bold py-2.5 px-3 rounded-xl border border-slate-700 transition flex items-center justify-center gap-1.5 text-xs">
+                            <i data-lucide="share-2" class="w-3.5 h-3.5 text-amber-400"></i> হোয়াটসঅ্যাপ সামারি
+                        </button>
+                        <button type="button" onclick="window.print()" class="bg-slate-800 hover:bg-slate-700 active:scale-[0.98] text-slate-200 font-bold py-2.5 px-3 rounded-xl border border-slate-700 transition flex items-center justify-center gap-1.5 text-xs">
+                            <i data-lucide="printer" class="w-3.5 h-3.5 text-blue-400"></i> প্রিন্ট স্লিপ
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Operational Tip Box -->
+            <div class="bg-amber-50 border border-amber-200 rounded-2xl p-3.5 text-xs text-amber-900">
+                <div class="flex items-start gap-2">
+                    <i data-lucide="info" class="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5"></i>
+                    <div>
+                        <span class="font-bold block mb-0.5">ব্যবহারের সুবিধা:</span>
+                        <p class="text-[11px] leading-relaxed text-amber-800">
+                            চালান নং ৩১২/৩১৮ এর মতো বালু বা পাথরের ট্রাক আসলে যেকোনো ৩ পয়েন্টের মান দিলেই অ্যাপ অটোমেটিক গড় হিসাব করে ফিক্সড ৩৭৪.৩৫ সিএফটি এর সাথে যোগ করে দেবে।
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Daily Log Table Section -->
+    <section class="max-w-6xl mx-auto w-full px-3 md:px-4 mt-6 no-print">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            
+            <!-- Table Header -->
+            <div class="p-4 border-b border-slate-200 flex flex-wrap justify-between items-center gap-2 bg-slate-50">
+                <div>
+                    <h3 class="font-bold text-slate-800 text-sm md:text-base flex items-center gap-2">
+                        <i data-lucide="history" class="w-4 h-4 text-slate-600"></i> আজকের রিসিভ করা গাড়ির রেজিস্টার
+                    </h3>
+                    <p class="text-xs text-slate-500">আপনার ডিভাইসে সংরক্ষিত আজকের এন্ট্রিসমূহ</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="exportToCSV()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition">
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i> Excel/CSV এ নামান
+                    </button>
+                    <button type="button" onclick="clearAllLogs()" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-xs font-bold border border-rose-200 transition">
+                        সব মুছুন
+                    </button>
+                </div>
+            </div>
+
+            <!-- Table Container -->
+            <div class="overflow-x-auto custom-scrollbar">
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead>
+                        <tr class="bg-slate-100 text-slate-600 border-b border-slate-200 uppercase font-bold">
+                            <th class="p-3">#</th>
+                            <th class="p-3">সময়</th>
+                            <th class="p-3">চালান নং</th>
+                            <th class="p-3">ট্রাক নং</th>
+                            <th class="p-3">পরিমাপের ধরন</th>
+                            <th class="p-3">বেস CFT</th>
+                            <th class="p-3">গড় CFT</th>
+                            <th class="p-3 text-right">মোট CFT</th>
+                            <th class="p-3 text-center">মুছুন</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logTableBody" class="divide-y divide-slate-100 font-medium">
+                        <tr id="emptyRow">
+                            <td colspan="9" class="text-center py-8 text-slate-400">
+                                <i data-lucide="inbox" class="w-8 h-8 mx-auto mb-2 text-slate-300"></i>
+                                এখনও কোনো গাড়ি সেভ করা হয়নি।
+                            </td>
+                        </tr>
+                    </tbody>
+                    <tfoot id="logTableFoot" class="hidden bg-slate-900 text-white font-bold">
+                        <tr>
+                            <td colspan="7" class="p-3 text-right">সর্বমোট প্রাপ্ত সিএফটি (Grand Total):</td>
+                            <td class="p-3 text-right text-amber-400 text-sm font-mono font-black" id="grandTotalCft">0.00 CFT</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Print Voucher Component (Only visible when printing) -->
+    <div class="hidden print-only p-8 bg-white text-slate-900">
+        <div class="text-center border-b pb-4 mb-4">
+            <h1 class="text-2xl font-bold">মেসার্স মুনসুর এন্টারপ্রাইজ / আকিজ পাইপ মিলস লি:</h1>
+            <p class="text-sm">রায় মনি, ত্রিশাল, ময়মনসিংহ। মেটেরিয়াল রিসিভিং স্লিপ</p>
+        </div>
+        <div class="grid grid-cols-2 gap-4 text-sm mb-4">
+            <div><strong>চালান নং:</strong> <span id="printChallan"></span></div>
+            <div><strong>ট্রাক নং:</strong> <span id="printTruck"></span></div>
+            <div><strong>তারিখ ও সময়:</strong> <span id="printTime"></span></div>
+            <div><strong>টাইপ:</strong> <span id="printType"></span></div>
+        </div>
+        <table class="w-full border-collapse border border-slate-400 text-sm mb-6">
+            <thead>
+                <tr class="bg-slate-100">
+                    <th class="border border-slate-400 p-2">বিবরণ</th>
+                    <th class="border border-slate-400 p-2 text-right">পরিমাণ (CFT)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="border border-slate-400 p-2">১ম অংশ (বেস বডি)</td>
+                    <td class="border border-slate-400 p-2 text-right font-mono" id="printBase"></td>
+                </tr>
+                <tr>
+                    <td class="border border-slate-400 p-2">২য় অংশ (৩-পয়েন্ট গড় পরিমাপ)</td>
+                    <td class="border border-slate-400 p-2 text-right font-mono" id="printAvg"></td>
+                </tr>
+                <tr class="font-bold bg-slate-50">
+                    <td class="border border-slate-400 p-2">সর্বমোট সিএফটি (Total Material)</td>
+                    <td class="border border-slate-400 p-2 text-right font-mono" id="printTotal"></td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="flex justify-between pt-12 text-center text-xs">
+            <div class="border-t border-slate-400 px-6 pt-1">গ্রহীতার স্বাক্ষর</div>
+            <div class="border-t border-slate-400 px-6 pt-1">সিকিউরিটি চেক</div>
+            <div class="border-t border-slate-400 px-6 pt-1">প্রোপ্রাইটর / মেজারার</div>
+        </div>
+    </div>
+
+    <!-- Notification Toast Message -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white text-xs px-4 py-3 rounded-2xl shadow-2xl border border-slate-700 flex items-center gap-2 transform translate-y-20 opacity-0 transition-all duration-300 z-50 no-print">
+        <i data-lucide="check-circle-2" class="w-4 h-4 text-amber-400"></i>
+        <span id="toastMsg" class="font-semibold">মেসেজ</span>
+    </div>
+
+    <!-- Application Script -->
+    <script>
+        // State management
+        let currentMode = 'std'; // 'std' or 'custom'
+        const STD_BASE_CFT = 374.35; // Standard 13'2" x 7'7" x 3'9"
+        let truckLogs = JSON.parse(localStorage.getItem('akij_truck_logs') || '[]');
+
+        // Initialize on DOM Ready
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            renderLogs();
+            calculate();
+        });
+
+        // Switch Mode (Standard vs Custom)
+        function setTruckMode(mode) {
+            currentMode = mode;
+            const btnStd = document.getElementById('btnModeStd');
+            const btnCustom = document.getElementById('btnModeCustom');
+            const stdCard = document.getElementById('stdBaseCard');
+            const customCard = document.getElementById('customBaseCard');
+            const activeLabel = document.getElementById('activeModeLabel');
+
+            if (mode === 'std') {
+                btnStd.className = "py-3 px-3 rounded-xl border-2 font-bold text-xs md:text-sm flex flex-col items-center justify-center transition bg-amber-500 text-slate-950 border-amber-500 shadow-md";
+                btnCustom.className = "py-3 px-3 rounded-xl border-2 font-bold text-xs md:text-sm flex flex-col items-center justify-center transition bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100";
+                stdCard.classList.remove('hidden');
+                customCard.classList.add('hidden');
+                activeLabel.innerText = "স্ট্যান্ডার্ড DMT";
+            } else {
+                btnCustom.className = "py-3 px-3 rounded-xl border-2 font-bold text-xs md:text-sm flex flex-col items-center justify-center transition bg-amber-500 text-slate-950 border-amber-500 shadow-md";
+                btnStd.className = "py-3 px-3 rounded-xl border-2 font-bold text-xs md:text-sm flex flex-col items-center justify-center transition bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100";
+                stdCard.classList.add('hidden');
+                customCard.classList.remove('hidden');
+                activeLabel.innerText = "কাস্টম ট্রাক";
+            }
+            calculate();
+        }
+
+        // Helper to convert ft and inch to total decimal feet
+        function getValInFeet(ftId, inId) {
+            const ft = parseFloat(document.getElementById(ftId).value) || 0;
+            const inch = parseFloat(document.getElementById(inId).value) || 0;
+            return ft + (inch / 12);
+        }
+
+        // Main Calculation Engine
+        function calculate() {
+            let baseCft = 0;
+
+            if (currentMode === 'std') {
+                baseCft = STD_BASE_CFT;
+            } else {
+                const bl = getValInFeet('base_l_ft', 'base_l_in');
+                const bw = getValInFeet('base_w_ft', 'base_w_in');
+                const bh = getValInFeet('base_h_ft', 'base_h_in');
+                baseCft = bl * bw * bh;
+                document.getElementById('customBaseCftBadge').innerText = `${baseCft.toFixed(2)} CFT`;
+            }
+
+            // 3-Point Length Average
+            const l1 = getValInFeet('l1_ft', 'l1_in');
+            const l2 = getValInFeet('l2_ft', 'l2_in');
+            const l3 = getValInFeet('l3_ft', 'l3_in');
+
+            let lSum = 0, lCount = 0;
+            if (l1 > 0) { lSum += l1; lCount++; }
+            if (l2 > 0) { lSum += l2; lCount++; }
+            if (l3 > 0) { lSum += l3; lCount++; }
+            const avgL = lCount > 0 ? lSum / lCount : 0;
+
+            const avgL_ft = Math.floor(avgL);
+            const avgL_in = Math.round((avgL - avgL_ft) * 12);
+            document.getElementById('avgLengthDisplay').innerText = `গড়: ${avgL_ft}' ${avgL_in}" (${avgL.toFixed(2)} ft)`;
+
+            // 3-Point Width Average
+            const w1 = getValInFeet('w1_ft', 'w1_in');
+            const w2 = getValInFeet('w2_ft', 'w2_in');
+            const w3 = getValInFeet('w3_ft', 'w3_in');
+
+            let wSum = 0, wCount = 0;
+            if (w1 > 0) { wSum += w1; wCount++; }
+            if (w2 > 0) { wSum += w2; wCount++; }
+            if (w3 > 0) { wSum += w3; wCount++; }
+            const avgW = wCount > 0 ? wSum / wCount : 0;
+
+            const avgW_ft = Math.floor(avgW);
+            const avgW_in = Math.round((avgW - avgW_ft) * 12);
+            document.getElementById('avgWidthDisplay').innerText = `গড়: ${avgW_ft}' ${avgW_in}" (${avgW.toFixed(2)} ft)`;
+
+            // Height / Depth of 2nd Part
+            const h = getValInFeet('h_ft', 'h_in');
+
+            // 2nd Part CFT = Avg Length * Avg Width * Height
+            const avgPartCft = avgL * avgW * h;
+
+            // Grand Total CFT = Base CFT + 2nd Part CFT
+            const totalCft = baseCft + avgPartCft;
+
+            // Update UI
+            document.getElementById('avgCftDisplayBadge').innerText = `+ ${avgPartCft.toFixed(2)} CFT`;
+            document.getElementById('totalCftDisplay').innerText = totalCft.toFixed(2);
+            document.getElementById('breakdownBase').innerText = `${baseCft.toFixed(2)} CFT`;
+            document.getElementById('breakdownAvg').innerText = `${avgPartCft.toFixed(2)} CFT`;
+
+            // Dynamic Update for Print slip
+            document.getElementById('printBase').innerText = `${baseCft.toFixed(2)} CFT`;
+            document.getElementById('printAvg').innerText = `${avgPartCft.toFixed(2)} CFT`;
+            document.getElementById('printTotal').innerText = `${totalCft.toFixed(2)} CFT`;
+
+            return {
+                baseCft: baseCft,
+                avgPartCft: avgPartCft,
+                totalCft: totalCft
+            };
+        }
+
+        // Reset form inputs for next truck
+        function resetForm() {
+            const inputs = document.querySelectorAll('input[type="number"], input[type="text"]');
+            inputs.forEach(input => input.value = '');
+            calculate();
+            showToast("ফরমটি সফলভাবে রিসেট করা হয়েছে");
+        }
+
+        // Save entry into local storage and table
+        function saveTruckLog() {
+            const res = calculate();
+            if (res.totalCft <= 0) {
+                showToast("অনুগ্রহ করে পরিমাপের সঠিক মান লিখুন!");
+                return;
+            }
+
+            const challan = document.getElementById('challanNo').value.trim() || 'N/A';
+            const truck = document.getElementById('truckNo').value.trim() || 'N/A';
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' });
+
+            const newLog = {
+                id: Date.now(),
+                time: timeStr,
+                challan: challan,
+                truck: truck,
+                mode: currentMode === 'std' ? 'DMT (374.35+গড়)' : 'কাস্টম',
+                baseCft: res.baseCft.toFixed(2),
+                avgCft: res.avgPartCft.toFixed(2),
+                totalCft: res.totalCft.toFixed(2)
+            };
+
+            truckLogs.unshift(newLog);
+            localStorage.setItem('akij_truck_logs', JSON.stringify(truckLogs));
+
+            renderLogs();
+            showToast("গাড়ির চালান ডাটা সফলভাবে সেভ হয়েছে!");
+
+            // Prepare Print View
+            document.getElementById('printChallan').innerText = challan;
+            document.getElementById('printTruck').innerText = truck;
+            document.getElementById('printTime').innerText = `${now.toLocaleDateString('bn-BD')} (${timeStr})`;
+            document.getElementById('printType').innerText = newLog.mode;
+
+            // Clear text inputs
+            document.getElementById('challanNo').value = '';
+            document.getElementById('truckNo').value = '';
+        }
+
+        // Render Table & Counter
+        function renderLogs() {
+            const tbody = document.getElementById('logTableBody');
+            const tfoot = document.getElementById('logTableFoot');
+            const counter = document.getElementById('dailyCounter');
+            
+            counter.innerText = truckLogs.length;
+
+            if (truckLogs.length === 0) {
+                tbody.innerHTML = `
+                    <tr id="emptyRow">
+                        <td colspan="9" class="text-center py-8 text-slate-400">
+                            <i data-lucide="inbox" class="w-8 h-8 mx-auto mb-2 text-slate-300"></i>
+                            এখনও কোনো গাড়ি সেভ করা হয়নি।
+                        </td>
+                    </tr>`;
+                tfoot.classList.add('hidden');
+                lucide.createIcons();
+                return;
+            }
+
+            let sumCft = 0;
+            let rowsHtml = '';
+
+            truckLogs.forEach((item, idx) => {
+                const total = parseFloat(item.totalCft);
+                sumCft += total;
+
+                rowsHtml += `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="p-3 font-semibold text-slate-500">${truckLogs.length - idx}</td>
+                        <td class="p-3 font-mono text-slate-600">${item.time}</td>
+                        <td class="p-3 font-bold text-slate-800">${item.challan}</td>
+                        <td class="p-3 font-bold text-slate-800">${item.truck}</td>
+                        <td class="p-3"><span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[10px] font-bold border border-slate-200">${item.mode}</span></td>
+                        <td class="p-3 font-mono text-slate-600">${item.baseCft}</td>
+                        <td class="p-3 font-mono text-blue-600">+${item.avgCft}</td>
+                        <td class="p-3 text-right font-mono font-bold text-amber-600 text-sm">${item.totalCft}</td>
+                        <td class="p-3 text-center">
+                            <button onclick="deleteLog(${item.id})" class="text-rose-500 hover:text-rose-700 p-1">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </td>
+                    </tr>`;
+            });
+
+            tbody.innerHTML = rowsHtml;
+            document.getElementById('grandTotalCft').innerText = `${sumCft.toFixed(2)} CFT`;
+            tfoot.classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        // Delete single log entry
+        function deleteLog(id) {
+            truckLogs = truckLogs.filter(item => item.id !== id);
+            localStorage.setItem('akij_truck_logs', JSON.stringify(truckLogs));
+            renderLogs();
+            showToast("এন্ট্রিটি মুছে ফেলা হয়েছে");
+        }
+
+        // Clear all daily logs
+        function clearAllLogs() {
+            if (confirm("আপনি কি আজকের সব এন্ট্রি মুছে ফেলতে চান?")) {
+                truckLogs = [];
+                localStorage.removeItem('akij_truck_logs');
+                renderLogs();
+                showToast("সমস্ত এন্ট্রি মুছে ফেলা হয়েছে");
+            }
+        }
+
+        // Share/Copy summary text for WhatsApp
+        function copyWhatsAppSummary() {
+            const res = calculate();
+            const challan = document.getElementById('challanNo').value || 'N/A';
+            const truck = document.getElementById('truckNo').value || 'N/A';
+
+            const summary = 
+`🚛 *আকিজ পাইপ মিলস লি: - মেটেরিয়াল রিসিভ*
+----------------------------------------
+📄 *চালান নং:* ${challan}
+🚚 *ট্রাক নং:* ${truck}
+🏷 *টাইপ:* ${currentMode === 'std' ? 'স্ট্যান্ডার্ড DMT (374.35 Base)' : 'কাস্টম বডি'}
+📐 *১ম অংশ (বেস বডি):* ${res.baseCft.toFixed(2)} CFT
+➕ *২য় অংশ (৩-পয়েন্ট গড়):* ${res.avgPartCft.toFixed(2)} CFT
+----------------------------------------
+📊 *সর্বমোট সিএফটি (Total): ${res.totalCft.toFixed(2)} CFT*
+----------------------------------------
+তারিখ: ${new Date().toLocaleDateString('bn-BD')}`;
+
+            const textArea = document.createElement("textarea");
+            textArea.value = summary;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand("copy");
+            document.body.removeChild(textArea);
+
+            showToast("হোয়াটসঅ্যাপ সামারি কপি হয়েছে!");
+        }
+
+        // Export data to CSV/Excel
+        function exportToCSV() {
+            if (truckLogs.length === 0) {
+                showToast("ডাউনলোড করার জন্য কোনো ডাটা নেই!");
+                return;
+            }
+
+            let csv = "\uFEFF"; // UTF-8 BOM for Bangla character support
+            csv += "SL,Time,Challan No,Truck No,Mode,Base CFT,Avg CFT,Total CFT\n";
+
+            truckLogs.forEach((item, index) => {
+                csv += `"${truckLogs.length - index}","${item.time}","${item.challan}","${item.truck}","${item.mode}","${item.baseCft}","${item.avgCft}","${item.totalCft}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Akij_Truck_CFT_Log_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast("Excel/CSV ফাইল নামানো হয়েছে!");
+        }
+
+        // Toast message utility
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').innerText = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
